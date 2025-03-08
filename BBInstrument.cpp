@@ -18,11 +18,11 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "address-mapper"
+#define DEBUG_TYPE "bb-instrument"
 
 #define DEBUG
 
-struct AddressMapper : PassInfoMixin<AddressMapper> {
+struct BBInstrument : PassInfoMixin<BBInstrument> {
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM) {
     IRBuilder<> builder(M.getContext());
     
@@ -38,7 +38,7 @@ struct AddressMapper : PassInfoMixin<AddressMapper> {
         errs() << "Instrumenting BB: " << BB.getName() << " in function: " << F.getName() << "\n";
         
         // Create a unique identifier for this basic block
-        std::string bbId = F.getName().str() + ":" + BB.getName().str();
+        std::string bbId = "bbid#" + F.getName().str() + "#" + BB.getName().str();
         
         // Create a global string variable with the BB identifier
         // Make it non-constant so we can modify it
@@ -49,7 +49,7 @@ struct AddressMapper : PassInfoMixin<AddressMapper> {
             false,  // isConstant = false so we can modify it
             GlobalValue::ExternalLinkage,  // Make it external so it's not optimized out
             stringConstant, 
-            "bb_id_" + bbId);
+            bbId);
         
         // Insert at the beginning of the basic block
         IRBuilder<> bbBuilder(&*BB.getFirstInsertionPt());
@@ -73,15 +73,15 @@ struct AddressMapper : PassInfoMixin<AddressMapper> {
 };
 
 // Plugin registration
-llvm::PassPluginLibraryInfo getAddressMapperPluginInfo() {
+llvm::PassPluginLibraryInfo getBBInstrumentPluginInfo() {
   return {
-      LLVM_PLUGIN_API_VERSION, "AddressMapper", LLVM_VERSION_STRING,
+      LLVM_PLUGIN_API_VERSION, "BBInstrument", LLVM_VERSION_STRING,
       [](PassBuilder &PB) {
         PB.registerPipelineParsingCallback(
             [](StringRef Name, ModulePassManager &MPM,
                ArrayRef<PassBuilder::PipelineElement>) {
-              if (Name == "address-mapper") {
-                MPM.addPass(AddressMapper());
+              if (Name == "bb_instrument") {
+                MPM.addPass(BBInstrument());
                 return true;
               }
               return false;
@@ -91,5 +91,5 @@ llvm::PassPluginLibraryInfo getAddressMapperPluginInfo() {
 
 extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
 llvmGetPassPluginInfo() {
-  return getAddressMapperPluginInfo();
+  return getBBInstrumentPluginInfo();
 } 

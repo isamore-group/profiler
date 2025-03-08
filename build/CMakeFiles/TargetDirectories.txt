@@ -1,9 +1,0 @@
-/home/uvxiao/profiler/build/CMakeFiles/intrinsics_gen.dir
-/home/uvxiao/profiler/build/CMakeFiles/omp_gen.dir
-/home/uvxiao/profiler/build/CMakeFiles/acc_gen.dir
-/home/uvxiao/profiler/build/CMakeFiles/RISCVTargetParserTableGen.dir
-/home/uvxiao/profiler/build/CMakeFiles/instrument.dir
-/home/uvxiao/profiler/build/CMakeFiles/address_mapper.dir
-/home/uvxiao/profiler/build/CMakeFiles/address_helper.dir
-/home/uvxiao/profiler/build/CMakeFiles/edit_cache.dir
-/home/uvxiao/profiler/build/CMakeFiles/rebuild_cache.dir

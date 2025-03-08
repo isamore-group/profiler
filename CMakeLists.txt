@@ -36,6 +36,4 @@ add_compile_options(-O3)
 add_compile_options(-fno-vectorize -fno-slp-vectorize -ffp-contract=off)
 add_compile_options(-fPIC)
 
-add_library(instrument SHARED Instrument.cpp)
-add_library(address_mapper SHARED AddressMapper.cpp)
-add_library(address_helper SHARED address_helper.cpp)
+add_library(bb_instrument SHARED BBInstrument.cpp)

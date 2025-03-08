@@ -1,7 +1,0 @@
-# ninja log v5
-3	5989	1741360113487992039	CMakeFiles/instrument.dir/Instrument.cpp.o	eff219c94d4d6cef
-5989	6076	1741360113598993090	lib/libinstrument.so	17eddd3a6cf023bb
-4	716	1741368981697469376	CMakeFiles/address_helper.dir/address_helper.cpp.o	2f0340a3d06624b0
-716	785	1741368981774469301	lib/libaddress_helper.so	49ad277a69b3a814
-3	5183	1741371929825875596	CMakeFiles/address_mapper.dir/AddressMapper.cpp.o	e48e77b37f0c9a70
-5183	5255	1741371929916876447	lib/libaddress_mapper.so	6174607f4dfcb7a
