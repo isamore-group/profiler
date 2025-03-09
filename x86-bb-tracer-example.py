@@ -75,7 +75,7 @@ parser.add_argument(
 parser.add_argument(
     "--output", 
     type=str, 
-    default="bb_profile.csv",
+    default="__bb_tracer.csv",
     help="Output file for the basic block profile"
 )
 parser.add_argument(

@@ -38,7 +38,7 @@ struct BBInstrument : PassInfoMixin<BBInstrument> {
         errs() << "Instrumenting BB: " << BB.getName() << " in function: " << F.getName() << "\n";
         
         // Create a unique identifier for this basic block
-        std::string bbId = "bbid#" + F.getName().str() + "#" + BB.getName().str();
+        std::string bbId = "____bbid#" + F.getName().str() + "#" + BB.getName().str();
         
         // Create a global string variable with the BB identifier
         // Make it non-constant so we can modify it
@@ -63,8 +63,9 @@ struct BBInstrument : PassInfoMixin<BBInstrument> {
             "bb_marker_ptr");
         
         
+        Value *char_ = ConstantInt::get(Type::getInt8Ty(M.getContext()), '_');
         // Store it back (this creates a self-reference that can't be optimized out)
-        bbBuilder.CreateStore(zero, firstCharPtr);
+        bbBuilder.CreateStore(char_, firstCharPtr);
       }
     }
     

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# bb_map.sh - Combined script for basic block instrumentation and analysis
+# instrument_bb.sh - Combined script for basic block instrumentation and analysis
 # This script combines the functionality of run_test.sh and analyze_binary.sh
 #
-# Usage: ./bb_map.sh [options] <input_file>
+# Usage: ./instrument_bb.sh [options] <input_file>
 # Options:
 #   -c, --cflags <flags>     Additional compiler flags for clang
 #   -o, --opt-flags <flags>  Additional flags for opt
@@ -61,7 +61,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      echo "Usage: ./bb_map.sh [options] <input_file>"
+      echo "Usage: ./instrument_bb.sh [options] <input_file>"
       echo "Options:"
       echo "  -c, --cflags <flags>     Additional compiler flags for clang"
       echo "  -o, --opt-flags <flags>  Additional flags for opt"
@@ -83,7 +83,7 @@ done
 # Check if input file is provided
 if [ -z "$INPUT_FILE" ]; then
   echo "Error: No input file specified"
-  echo "Run './bb_map.sh --help' for usage information"
+  echo "Run './instrument_bb.sh --help' for usage information"
   exit 1
 fi
 

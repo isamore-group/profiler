@@ -52,7 +52,7 @@ To use the BBTracer, you need to:
 ```python
 # Create a BBTracer for the core
 bb_tracer = BBTracer(
-    output_file="bb_profile.csv"
+    output_file="bb_tracer.csv"
 )
 
 # Set the tracer for the CPU

@@ -1,6 +1,6 @@
-# LLVM Basic Block Instrumentation
+# LLVM/GEM5 Basic Block Instrumentation
 
-This project provides an LLVM pass for basic block instrumentation that enables mapping between source code basic blocks and their addresses in compiled binaries.
+This project provides an LLVM pass for basic block instrumentation that enables mapping between source code basic blocks and their addresses in compiled binaries. It also provides a GEM5 tracer for LLVM basic block profiling.
 
 ## Overview
 
@@ -18,7 +18,7 @@ make
 ## How It Works
 
 1. For each basic block in the program, the pass:
-   - Creates a unique identifier string in the format `bbid#function_name#basic_block_name`
+   - Creates a unique identifier string in the format `____bbid#function_name#basic_block_name`
    - Creates a global string variable containing this identifier
    - Inserts a marker instruction at the beginning of the basic block that references this global string
    - The marker is designed to be preserved through optimization passes
@@ -28,14 +28,14 @@ make
    - This creates a mapping between binary addresses and source-level basic blocks
    - The mapping is saved to a CSV file for further analysis
 
-## Usage
+## Usage (LLVM Part)
 
 ### All-in-One Approach
 
-The easiest way to use this tool is with the combined `bb_map.sh` script, which handles the entire process from compilation to analysis:
+The easiest way to use this tool is with the combined `instrument_bb.sh` script, which handles the entire process from compilation to analysis:
 
 ```bash
-./bb_map.sh your_source_file.cpp
+./instrument_bb.sh your_source_file.cpp
 ```
 
 This will:
@@ -48,7 +48,7 @@ This will:
 For more options:
 
 ```bash
-./bb_map.sh --help
+./instrument_bb.sh --help
 ```
 
 Available options include:
@@ -60,54 +60,15 @@ Available options include:
 - `-k, --keep-temps`: Keep temporary files (IR, assembly, etc.)
 - `-n, --no-run`: Don't run the executable after compilation
 
-### Step-by-Step Approach
+## Usage (GEM5 Part)
 
-Alternatively, you can use the individual scripts for more control:
+### Basic Block Profiling
 
-#### 1. Instrumenting Code
+To profile basic blocks in a GEM5 simulation, you can use the `x86-bb-tracer-example.py` script. This script sets up a basic GEM5 simulation with a single core and a simple memory system, and then uses the `BBTracer` to profile the basic blocks of the program.
 
-Use the provided `run_test.sh` script in the `tests` directory:
+See the [BB_TRACER_README.md](BB_TRACER_README.md) file for more details.
 
-```bash
-cd tests
-./run_test.sh your_source_file.cpp
-```
 
-Or manually:
-
-```bash
-# Compile source to LLVM IR
-clang++ -S -emit-llvm source.cpp -o source.ll
-
-# Apply the instrumentation pass
-opt -load-pass-plugin=./build/lib/libbb_instrument.so -passes=bb_instrument source.ll -o instrumented.ll
-
-# Compile to executable
-clang++ instrumented.ll -o executable
-```
-
-#### 2. Analyzing the Binary
-
-After compiling the instrumented code, use the `analyze_binary.sh` script:
-
-```bash
-./analyze_binary.sh executable
-```
-
-This will create a `bb_mapping.csv` file with the format:
-```
-Address,Basic Block ID
-1234,function_name#entry
-5678,function_name#if.then
-...
-```
-
-## Technical Details
-
-- The instrumentation uses a store instruction to a global string variable, which creates a reference that is preserved through optimization
-- The format of the identifier is `bbid#function_name#block_name` to make it easy to extract from assembly
-- The pass works with standard LLVM optimization passes and doesn't significantly impact performance
-- The analysis script uses `objdump` to extract the markers from the compiled binary
 
 ## Requirements
 
