@@ -33,7 +33,7 @@ add_compile_options(-Wall)
 add_compile_options(-fno-rtti)
 add_compile_options(-ggdb)
 add_compile_options(-O3)
-add_compile_options(-fno-vectorize -fno-slp-vectorize -ffp-contract=off)
+# add_compile_options(-fno-vectorize -fno-slp-vectorize -ffp-contract=off)
 add_compile_options(-fPIC)
 
 add_library(bb_instrument SHARED BBInstrument.cpp)

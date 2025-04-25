@@ -67,19 +67,19 @@ m5.debug.flags["BBTracer"].enable()
 We provide an example script `x86-bb-tracer-example.py` that demonstrates how to use the BBTracer:
 
 ```
-./build/X86/gem5.opt --debug-flags=BBTracer x86-bb-tracer-example.py __test.exe
+./gem5/build/X86/gem5.opt --debug-flags=BBTracer x86-bb-tracer-example.py __test.exe
 ```
 
 You can specify the output file for the profiling results:
 
 ```
-./build/X86/gem5.opt --debug-flags=BBTracer x86-bb-tracer-example.py __test.exe --output=my_profile.csv
+./gem5/build/X86/gem5.opt --debug-flags=BBTracer x86-bb-tracer-example.py __test.exe --output=my_profile.csv
 ```
 
 You can also pass arguments to the binary:
 
 ```
-./build/X86/gem5.opt --debug-flags=BBTracer x86-bb-tracer-example.py __test.exe --args="arg1 arg2"
+./gem5/build/X86/gem5.opt --debug-flags=BBTracer x86-bb-tracer-example.py __test.exe --args="arg1 arg2"
 ```
 
 ## Output Format
