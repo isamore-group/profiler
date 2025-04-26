@@ -49,6 +49,7 @@ BBInstrument LLVM pass.
 
 import argparse
 import os
+from pathlib import Path
 import sys
 
 import m5
@@ -73,6 +74,12 @@ parser.add_argument(
     help="Path to the instrumented binary to run"
 )
 parser.add_argument(
+    "--temp-path",
+    type=str,
+    default="temp",
+    help="Path to store temporary files"
+)
+parser.add_argument(
     "--output", 
     type=str, 
     default="__bb_tracer.csv",
@@ -88,6 +95,22 @@ parser.add_argument(
 args = parser.parse_args()
 
 print("args.binary: ", args.binary)
+
+from m5 import options
+from _m5.core import setOutputDir
+
+new_outdir = Path(args.temp_path)
+new_outdir.mkdir(parents=True, exist_ok=True)
+
+if not new_outdir.exists():
+    raise Exception(f"Directory '{new_outdir}' does not exist")
+
+if not new_outdir.is_dir():
+    raise Exception(f"'{new_outdir}' is not a directory")
+
+options.outdir = str(new_outdir)
+setOutputDir(options.outdir)
+
 
 # Check if the binary exists
 if not os.path.exists(args.binary):
@@ -146,6 +169,7 @@ m5.debug.flags["BBTracer"].enable()
 print(f"Starting simulation with BBTracer...")
 print(f"Binary: {args.binary}")
 print(f"Output file: {args.output}")
+print(f"Output directory: {args.temp_path}")
 if args.args:
     print(f"Arguments: {args.args}")
 
@@ -155,7 +179,10 @@ simulator = Simulator(
     on_exit_event={
         ExitEvent.EXIT: lambda: (print("Program completed normally."), True)
     },
+    
 )
+
+# simulator.override_outdir(Path(args.temp_path))
 
 # Run the simulation
 simulator.run()

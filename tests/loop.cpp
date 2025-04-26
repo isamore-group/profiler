@@ -15,6 +15,9 @@ int main(int argc, char **argv) {
     }
     a[i] = sum;
   }
-  printf("a[1] = %d\na[%d] = %d\n", a[1], n - 1, a[n - 1]);
+label0:
+  int x = a[0], y = a[n-1], z = a[n/2];
+  int ans = (x<<1) + (y*3) + (z/2);
+  printf("a[1] = %d\na[%d] = %d\na[%d] = %d\nans = %d\n", a[1], n - 1, a[n - 1], n/2, a[n/2], ans);
   return 0;
 }

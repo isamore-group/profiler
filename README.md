@@ -59,6 +59,9 @@ Available options include:
 - `-d, --objdump <path>`: Custom path to objdump executable
 - `-k, --keep-temps`: Keep temporary files (IR, assembly, etc.)
 - `-n, --no-run`: Don't run the executable after compilation
+- `--llvm-path <path>`: Path to LLVM installation directory
+- `--build-path <path>`: Path to build directory containing the pass library
+- `--temp-path <path>`: Path for storing temporary files
 
 ## Usage (GEM5 Part)
 

@@ -12,21 +12,26 @@
 #   -d, --objdump <path>     Path to objdump executable
 #   -k, --keep-temps         Keep temporary files (IR, assembly, etc.)
 #   -n, --no-run             Don't run the executable after compilation
+#   --llvm-path <path>       Path to LLVM installation directory
+#   --build-path <path>      Path to build directory containing the pass library
+#   --temp-path <path>       Path for storing temporary files
 #   -h, --help               Show this help message
 
 set -e  # Exit on error
 
 # Default values
 LLVM_PATH="${LLVM_PATH:-$HOME/repos/jlm/build-llvm-mlir}"
-CLANG="${CLANG:-$LLVM_PATH/bin/clang++}"
+CLANG="${CLANG:-$LLVM_PATH/bin/clang}"
 OPT="${OPT:-$LLVM_PATH/bin/opt}"
-PASS_PATH="${PASS_PATH:-./build/lib/libbb_instrument.so}"
+BUILD_PATH="${BUILD_PATH:-./build}"
+PASS_PATH="${PASS_PATH:-$BUILD_PATH/lib/libbb_instrument.so}"
 OBJDUMP="${OBJDUMP:-objdump}"
 CFLAGS=""
 OPT_FLAGS=""
 SKIP_COMPILE=0
 KEEP_TEMPS=0
-RUN_EXECUTABLE=1
+TEMP_PATH="${TEMP_PATH:-./temp}"
+RUN_EXECUTABLE=0
 OUTPUT_MAP=""
 
 # Parse arguments
@@ -56,9 +61,24 @@ while [[ $# -gt 0 ]]; do
       KEEP_TEMPS=1
       shift
       ;;
-    -n|--no-run)
-      RUN_EXECUTABLE=0
+    -r|--run)
+      RUN_EXECUTABLE=1
       shift
+      ;;
+    --llvm-path)
+      LLVM_PATH="$2"
+      CLANG="$LLVM_PATH/bin/clang"
+      OPT="$LLVM_PATH/bin/opt"
+      shift 2
+      ;;
+    --build-path)
+      BUILD_PATH="$2"
+      PASS_PATH="$BUILD_PATH/lib/libbb_instrument.so"
+      shift 2
+      ;;
+    --temp-path)
+      TEMP_PATH="$2"
+      shift 2
       ;;
     -h|--help)
       echo "Usage: ./instrument_bb.sh [options] <input_file>"
@@ -70,6 +90,9 @@ while [[ $# -gt 0 ]]; do
       echo "  -d, --objdump <path>     Path to objdump executable"
       echo "  -k, --keep-temps         Keep temporary files (IR, assembly, etc.)"
       echo "  -n, --no-run             Don't run the executable after compilation"
+      echo "  --llvm-path <path>       Path to LLVM installation directory (default: $HOME/repos/jlm/build-llvm-mlir)"
+      echo "  --build-path <path>      Path to build directory containing the pass library (default: ./build)"
+      echo "  --temp-path <path>       Path for storing temporary files (default: ./temp)"
       echo "  -h, --help               Show this help message"
       exit 0
       ;;
@@ -109,7 +132,7 @@ fi
 # Set output file names based on input file name
 FILENAME=$(basename -- "$INPUT_FILE")
 FILENAME_NOEXT="${FILENAME%.*}"
-OUTPUT_PREFIX="__$FILENAME_NOEXT"
+OUTPUT_PREFIX="$TEMP_PATH/$FILENAME_NOEXT"
 LL_FILE="${OUTPUT_PREFIX}.ll"
 INSTRUMENTED_LL="${OUTPUT_PREFIX}_instrumented.ll"
 ASM_FILE="${OUTPUT_PREFIX}.s"
@@ -117,7 +140,7 @@ EXECUTABLE="${OUTPUT_PREFIX}.exe"
 
 # Set default output map file if not specified
 if [ -z "$OUTPUT_MAP" ]; then
-  OUTPUT_MAP="${OUTPUT_PREFIX}_bb_map.csv"
+  OUTPUT_MAP="${OUTPUT_PREFIX}.bbmap.csv"
 fi
 
 echo "=== Basic Block Instrumentation and Mapping ==="
@@ -129,9 +152,11 @@ echo
 # PART 1: INSTRUMENTATION (from run_test.sh)
 echo "=== INSTRUMENTATION PHASE ==="
 
+mkdir -p "$TEMP_PATH"
 # Compile to LLVM IR if needed
 if [ $SKIP_COMPILE -eq 0 ]; then
   echo "Compiling $INPUT_FILE to LLVM IR..."
+  echo "  command: $CLANG -S -emit-llvm $CFLAGS \"$INPUT_FILE\" -o \"$LL_FILE\""
   $CLANG -S -emit-llvm $CFLAGS "$INPUT_FILE" -o "$LL_FILE" || { 
     echo "Error: Failed to compile $INPUT_FILE to LLVM IR"; 
     exit 1; 
@@ -151,7 +176,7 @@ $OPT -load-pass-plugin="$PASS_PATH" -passes=bb_instrument $OPT_FLAGS "$LL_FILE" 
 
 echo "Compiling the instrumented IR to ASM..."
 # Compile the instrumented IR to assembly for inspection
-$CLANG "$INSTRUMENTED_LL" -o "$ASM_FILE" -O3 -S $CFLAGS || { 
+$CLANG "$INSTRUMENTED_LL" -o "$ASM_FILE" -S $CFLAGS || { 
   echo "Error: Failed to compile instrumented IR to assembly"; 
   exit 1; 
 }
@@ -220,7 +245,7 @@ if [ $RUN_EXECUTABLE -eq 1 ]; then
   echo
   echo "=== EXECUTION PHASE ==="
   echo "Running the executable..."
-  ./"$EXECUTABLE" || { 
+  "$EXECUTABLE" || { 
     echo "Error: Executable crashed"; 
     exit 1; 
   }
