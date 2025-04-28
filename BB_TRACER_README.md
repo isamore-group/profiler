@@ -88,7 +88,7 @@ The BBTracer writes the profiling results to a CSV file with the following colum
 
 - Basic Block ID: The ID of the basic block (functionname#bbname)
 - Execution Count: The number of times the basic block was executed
-- Total Time (ticks): The total time spent in the basic block (in ticks)
+- Total Time (ticks): The total time spent in the basic block (in ticks)  
 - Average Time (ticks): The average time spent in the basic block (in ticks)
 
 ## Debugging
