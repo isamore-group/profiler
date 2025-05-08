@@ -22,6 +22,7 @@ set -e  # Exit on error
 # Default values
 LLVM_PATH="${LLVM_PATH:-$HOME/repos/jlm/build-llvm-mlir}"
 CLANG="${CLANG:-$LLVM_PATH/bin/clang}"
+LLVM_DIS="${LLVM_DIS:-$LLVM_PATH/bin/llvm-dis}"
 OPT="${OPT:-$LLVM_PATH/bin/opt}"
 BUILD_PATH="${BUILD_PATH:-./build}"
 PASS_PATH="${PASS_PATH:-$BUILD_PATH/lib/libbb_instrument.so}"
@@ -33,6 +34,7 @@ KEEP_TEMPS=0
 TEMP_PATH="${TEMP_PATH:-./temp}"
 RUN_EXECUTABLE=0
 OUTPUT_MAP=""
+COUNT_MAP=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -51,6 +53,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -m|--output-map)
       OUTPUT_MAP="$2"
+      shift 2
+      ;;
+    -c|--count-map)
+      COUNT_MAP="$2"
       shift 2
       ;;
     -d|--objdump)
@@ -134,6 +140,7 @@ FILENAME=$(basename -- "$INPUT_FILE")
 FILENAME_NOEXT="${FILENAME%.*}"
 OUTPUT_PREFIX="$TEMP_PATH/$FILENAME_NOEXT"
 LL_FILE="${OUTPUT_PREFIX}.ll"
+INSTRUMENTED="${OUTPUT_PREFIX}_instrumented.bc"
 INSTRUMENTED_LL="${OUTPUT_PREFIX}_instrumented.ll"
 ASM_FILE="${OUTPUT_PREFIX}.s"
 EXECUTABLE="${OUTPUT_PREFIX}.exe"
@@ -141,6 +148,11 @@ EXECUTABLE="${OUTPUT_PREFIX}.exe"
 # Set default output map file if not specified
 if [ -z "$OUTPUT_MAP" ]; then
   OUTPUT_MAP="${OUTPUT_PREFIX}.bbmap.csv"
+fi
+
+# Set default count map file if not specified
+if [ -z "$COUNT_MAP" ]; then
+  COUNT_MAP="${OUTPUT_PREFIX}.count.csv"
 fi
 
 echo "=== Basic Block Instrumentation and Mapping ==="
@@ -167,16 +179,24 @@ else
   LL_FILE="$INPUT_FILE"
 fi
 
+# if COUNT_MAP is specified, add it to the opt flags
+if [ -n "$COUNT_MAP" ]; then
+  OPT_FLAGS="$OPT_FLAGS -count-file $COUNT_MAP"
+fi
+
 echo "Applying BBInstrument pass..."
 # Apply the BBInstrument pass
-$OPT -load-pass-plugin="$PASS_PATH" -passes=bb_instrument $OPT_FLAGS "$LL_FILE" -o "$INSTRUMENTED_LL" || { 
+$OPT -load-pass-plugin="$PASS_PATH" -passes=bb_instrument $OPT_FLAGS "$LL_FILE" -o "$INSTRUMENTED" || { 
   echo "Error: Failed to apply BBInstrument pass"; 
   exit 1; 
 }
 
+echo "Showing instrumented IR..."
+"$LLVM_DIS" "$INSTRUMENTED" -o "$INSTRUMENTED_LL"
+
 echo "Compiling the instrumented IR to ASM..."
 # Compile the instrumented IR to assembly for inspection
-$CLANG "$INSTRUMENTED_LL" -o "$ASM_FILE" -S $CFLAGS || { 
+$CLANG "$INSTRUMENTED" -o "$ASM_FILE" -S $CFLAGS || { 
   echo "Error: Failed to compile instrumented IR to assembly"; 
   exit 1; 
 }
@@ -256,3 +276,6 @@ echo
 echo "=== COMPLETE ==="
 echo "Basic block mapping process completed successfully."
 echo "You can find the mapping between addresses and basic blocks in: $OUTPUT_MAP" 
+if [ -n "$COUNT_MAP" ]; then
+  echo "You can find the basic block counts in: $COUNT_MAP"
+fi

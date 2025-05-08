@@ -91,6 +91,17 @@ parser.add_argument(
     default="",
     help="Arguments to pass to the binary"
 )
+parser.add_argument(
+    "--opcount-file",
+    type=str,
+    default="__bb_opcounts.csv",
+    help="Input file for basic block operation counts"
+)
+parser.add_argument(
+    "--debug",
+    action="store_true",
+    help="Enable debug mode"
+)
 
 args = parser.parse_args()
 
@@ -132,8 +143,12 @@ processor = SimpleProcessor(
 
 # Create a BBTracer for the core
 bb_tracer = BBTracer(
-    output_file=args.output
+    output_file=args.output,
+    opcount_file=args.opcount_file
 )
+
+# print(processor.get_cores())
+# exit(0)
 
 # Set the tracer for the CPU
 processor.get_cores()[0].core.tracer = bb_tracer
@@ -163,7 +178,8 @@ board.set_se_binary_workload(
 )
 
 # Enable the BBTracer debug flag
-m5.debug.flags["BBTracer"].enable()
+if args.debug:
+    m5.debug.flags["BBTracer"].enable()
 
 # Print simulation information
 print(f"Starting simulation with BBTracer...")

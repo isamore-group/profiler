@@ -15,16 +15,18 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <fstream>
 
 using namespace llvm;
 
 #define DEBUG_TYPE "bb-instrument"
 
-#define DEBUG
+cl::opt<std::string> CountFile("count-file", cl::desc("Output file for basic block counts"), cl::value_desc("filename"));
 
-struct BBInstrument : PassInfoMixin<BBInstrument> {
+struct BBInstrument : PassInfoMixin<BBInstrument> {  
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM) {
     IRBuilder<> builder(M.getContext());
+    std::map<std::string, unsigned> bbOpCounts;
     
     // For each basic block, add a marker instruction that references a unique identifier
     for (auto &F : M) {
@@ -39,6 +41,16 @@ struct BBInstrument : PassInfoMixin<BBInstrument> {
         
         // Create a unique identifier for this basic block
         std::string bbId = "____bbid#" + F.getName().str() + "#" + BB.getName().str();
+        std::string bbIdRaw = F.getName().str() + "#" + BB.getName().str();
+        
+        // Count operations in this basic block
+        unsigned opCount = 0;
+        for (auto &I : BB) {
+          if (!isa<PHINode>(&I) && !isa<DbgInfoIntrinsic>(&I)) {
+            opCount++;
+          }
+        }
+        bbOpCounts[bbIdRaw] = opCount;
         
         // Create a global string variable with the BB identifier
         // Make it non-constant so we can modify it
@@ -62,10 +74,24 @@ struct BBInstrument : PassInfoMixin<BBInstrument> {
             {zero, zero}, 
             "bb_marker_ptr");
         
-        
         Value *char_ = ConstantInt::get(Type::getInt8Ty(M.getContext()), '_');
         // Store it back (this creates a self-reference that can't be optimized out)
         bbBuilder.CreateStore(char_, firstCharPtr);
+      }
+    }
+    
+    // Output the mapping to file if specified
+    if (!CountFile.empty()) {
+      auto outputFile = CountFile.getValue();
+      std::ofstream outFile(outputFile);
+      if (outFile.is_open()) {
+        outFile << "bbid,opcount\n";
+        for (const auto &pair : bbOpCounts) {
+          outFile << pair.first << "," << pair.second << "\n";
+        }
+        outFile.close();
+      } else {
+        errs() << "Warning: Could not open output file: " << outputFile << "\n";
       }
     }
     
