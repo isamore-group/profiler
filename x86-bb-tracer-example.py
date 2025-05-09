@@ -103,6 +103,13 @@ parser.add_argument(
     help="Enable debug mode"
 )
 
+parser.add_argument(
+    "--cpu-type",
+    type=str,
+    default="minor",
+    help="CPU type to use"
+)
+
 args = parser.parse_args()
 
 print("args.binary: ", args.binary)
@@ -134,13 +141,28 @@ cache_hierarchy = NoCache()
 # Set up the memory system
 memory = SingleChannelDDR4_2400("1GB")
 
-# Set up the processor with a single core
-processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, 
-    num_cores=1, 
-    isa=ISA.X86
-)
 
+if args.cpu_type == "simple":
+    # Set up the processor with a single core
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.TIMING, 
+        num_cores=1, 
+        isa=ISA.X86
+    )
+elif args.cpu_type == "minor":
+    # Set up the processor with a single core
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.MINOR, 
+        num_cores=1, 
+        isa=ISA.X86
+    )
+elif args.cpu_type == "O3":
+    # Set up the processor with a single core
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.O3, 
+        num_cores=1, 
+        isa=ISA.X86
+    )
 # Create a BBTracer for the core
 bb_tracer = BBTracer(
     output_file=args.output,

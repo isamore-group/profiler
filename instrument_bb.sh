@@ -27,7 +27,7 @@ OPT="${OPT:-$LLVM_PATH/bin/opt}"
 BUILD_PATH="${BUILD_PATH:-./build}"
 PASS_PATH="${PASS_PATH:-$BUILD_PATH/lib/libbb_instrument.so}"
 OBJDUMP="${OBJDUMP:-objdump}"
-CFLAGS=""
+CFLAGS="-O2 -fno-vectorize -fno-slp-vectorize -ffp-contract=off -mno-sse -mno-sse2 -mno-avx -mno-avx2 -mno-avx512f"
 OPT_FLAGS=""
 SKIP_COMPILE=0
 KEEP_TEMPS=0
