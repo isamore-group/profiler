@@ -52,11 +52,14 @@ import os
 from pathlib import Path
 import sys
 
+
 import m5
 from m5.objects import BBTracer
 
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
+from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import PrivateL1CacheHierarchy
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import PrivateL1PrivateL2CacheHierarchy
 from gem5.components.memory.single_channel import SingleChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
@@ -110,6 +113,13 @@ parser.add_argument(
     help="CPU type to use"
 )
 
+parser.add_argument(
+    "--cache-hierarchy",
+    type=str,
+    default="no_cache",
+    help="Cache hierarchy to use"
+)
+
 args = parser.parse_args()
 
 print("args.binary: ", args.binary)
@@ -136,7 +146,14 @@ if not os.path.exists(args.binary):
     sys.exit(1)
 
 # Use a simple cache hierarchy (no cache for simplicity)
-cache_hierarchy = NoCache()
+if args.cache_hierarchy == "no_cache":
+    cache_hierarchy = NoCache()
+elif args.cache_hierarchy == "private_l1":
+    cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="32KiB", l1i_size="32KiB")
+elif args.cache_hierarchy == "private_l1_private_l2":
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(l1d_size="32KiB", l1i_size="32KiB", l2_size="256KiB")
+else:
+    raise Exception(f"Invalid cache hierarchy: {args.cache_hierarchy}")
 
 # Set up the memory system
 memory = SingleChannelDDR4_2400("1GB")
