@@ -203,10 +203,18 @@ $CLANG "$INSTRUMENTED" -o "$ASM_FILE" -S $CFLAGS || {
 
 echo "Compiling ASM to executable..."
 # Compile the assembly to an executable
-$CLANG "$ASM_FILE" -o "$EXECUTABLE" $CFLAGS || { 
-  echo "Error: Failed to compile assembly to executable"; 
-  exit 1; 
-}
+# Check if this is a C++ file and add appropriate flags
+if [[ "$INPUT_FILE" == *.cpp ]] || [[ "$INPUT_FILE" == *.cc ]] || [[ "$INPUT_FILE" == *.cxx ]]; then
+  $CLANG "$ASM_FILE" -o "$EXECUTABLE" $CFLAGS -lm -lstdc++ || { 
+    echo "Error: Failed to compile assembly to executable"; 
+    exit 1; 
+  }
+else
+  $CLANG "$ASM_FILE" -o "$EXECUTABLE" $CFLAGS -lm || { 
+    echo "Error: Failed to compile assembly to executable"; 
+    exit 1; 
+  }
+fi
 
 echo "Executable generated at $EXECUTABLE"
 echo
